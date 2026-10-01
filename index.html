@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101522" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Meeting Cards" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="100 道 Upwork 手机 App 客户 Meeting 问题，每题三种完全不同的回答方向。" />
+  <title>Upwork Meeting Cards · 100 × 3</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <button class="icon-button mobile-only" id="openDeckButton" aria-label="打开卡片管理" title="卡片管理">☰</button>
+        <div>
+          <div class="brand">Upwork Meeting Cards</div>
+          <div class="subtitle" id="deckSubtitle">100 道问题 · 每题 3 个独立回答方向</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="secondary-button" id="shuffleButton" type="button" title="随机排序">随机</button>
+        <button class="secondary-button desktop-only" id="manageButton" type="button">管理卡片</button>
+        <button class="secondary-button" id="installButton" type="button" hidden>安装</button>
+      </div>
+    </header>
+
+    <main class="study-layout">
+      <section class="study-panel" aria-label="卡片学习区">
+        <div class="study-meta">
+          <div class="progress-text" id="progressText">1 / 100</div>
+          <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="status-chip" id="stageChip">只看问题</div>
+        </div>
+
+        <article class="flashcard" id="flashcard" tabindex="0" aria-live="polite">
+          <div class="card-section question-section">
+            <div class="section-row">
+              <div class="section-label">QUESTION</div>
+              <div class="category-chip" id="categoryChip"></div>
+            </div>
+            <div class="english question-text" id="questionText"></div>
+          </div>
+
+          <div class="answer-choice-wrap" id="answerChoiceWrap">
+            <div class="choice-caption">选择一种回答方向练习</div>
+            <div class="answer-tabs" role="tablist" aria-label="答案方向">
+              <button class="answer-tab active" id="answerTab0" data-answer-index="0" type="button" role="tab">答案 1</button>
+              <button class="answer-tab" id="answerTab1" data-answer-index="1" type="button" role="tab">答案 2</button>
+              <button class="answer-tab" id="answerTab2" data-answer-index="2" type="button" role="tab">答案 3</button>
+            </div>
+          </div>
+
+          <div class="card-divider" id="answerDivider" hidden></div>
+
+          <div class="card-section answer-section" id="answerSection" hidden>
+            <div class="section-row">
+              <div class="section-label">ANSWER</div>
+              <div class="answer-angle" id="answerAngle"></div>
+            </div>
+            <div class="english answer-text" id="answerText"></div>
+          </div>
+
+          <div class="translation-panel" id="translationPanel" hidden>
+            <div class="translation-block">
+              <div class="section-label">问题翻译</div>
+              <div class="chinese" id="questionTranslation"></div>
+            </div>
+            <div class="translation-block">
+              <div class="section-label" id="answerTranslationLabel">答案翻译</div>
+              <div class="chinese" id="answerTranslation"></div>
+            </div>
+          </div>
+        </article>
+
+        <div class="primary-actions">
+          <button class="primary-button" id="revealAnswerButton" type="button">显示答案</button>
+          <button class="primary-button" id="revealTranslationButton" type="button" disabled>显示翻译</button>
+          <button class="primary-button" id="nextButton" type="button">下一张</button>
+        </div>
+
+        <div class="navigation-actions">
+          <button class="text-button" id="previousButton" type="button">← 上一张</button>
+          <button class="text-button" id="restartButton" type="button">遮住全部</button>
+          <button class="text-button" id="skipButton" type="button">跳过 →</button>
+        </div>
+
+        <div class="keyboard-help">
+          <span><kbd>Space</kbd>/<kbd>A</kbd> 显示或遮住答案</span>
+          <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 切换方向</span>
+          <span><kbd>T</kbd> 翻译</span>
+          <span><kbd>←</kbd><kbd>→</kbd> 卡片</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+  <aside class="drawer" id="deckDrawer" aria-label="卡片管理" aria-hidden="true">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-title">卡片管理</div>
+        <div class="drawer-subtitle"><span id="cardCount">0</span> 张卡片 · 自动保存在本机</div>
+      </div>
+      <button class="icon-button" id="closeDrawerButton" aria-label="关闭">×</button>
+    </div>
+
+    <div class="drawer-toolbar">
+      <button class="primary-button compact" id="addCardButton" type="button">＋ 新建卡片</button>
+      <button class="secondary-button compact" id="exportButton" type="button">导出 JSON</button>
+      <label class="secondary-button compact file-button">导入 JSON<input id="importInput" type="file" accept="application/json,.json" hidden /></label>
+      <button class="danger-text-button" id="resetDeckButton" type="button">恢复内置 100 题</button>
+    </div>
+
+    <label class="search-box">
+      <span aria-hidden="true">⌕</span>
+      <input id="searchInput" type="search" placeholder="搜索问题、回答或分类" autocomplete="off" />
+    </label>
+
+    <div class="card-list" id="cardList"></div>
+  </aside>
+
+  <dialog class="editor-dialog" id="editorDialog">
+    <form method="dialog" id="editorForm">
+      <div class="dialog-header">
+        <div>
+          <div class="dialog-title" id="editorTitle">新建卡片</div>
+          <div class="dialog-subtitle">每道题保留三种内容不同的回答方向</div>
+        </div>
+        <button class="icon-button" id="closeEditorButton" type="button" aria-label="关闭">×</button>
+      </div>
+
+      <div class="form-grid">
+        <label class="field">
+          <span>分类（中文）</span>
+          <input id="editCategoryZh" type="text" required placeholder="例如：经验与案例" />
+        </label>
+        <label class="field">
+          <span>Category (English)</span>
+          <input id="editCategoryEn" type="text" required placeholder="Experience & proof" />
+        </label>
+        <label class="field full-width">
+          <span>问题（英语）</span>
+          <textarea id="editQuestionEn" rows="3" required></textarea>
+        </label>
+        <label class="field full-width">
+          <span>问题翻译（中文）</span>
+          <textarea id="editQuestionZh" rows="3" required></textarea>
+        </label>
+
+        <section class="answer-editor full-width">
+          <div class="answer-editor-title">答案方向 1</div>
+          <div class="form-grid nested-grid">
+            <label class="field"><span>方向名称（中文）</span><input id="editAngleZh0" type="text" required /></label>
+            <label class="field"><span>Angle name (English)</span><input id="editAngleEn0" type="text" required /></label>
+            <label class="field full-width"><span>答案（英语）</span><textarea id="editAnswerEn0" rows="5" required></textarea></label>
+            <label class="field full-width"><span>答案翻译（中文）</span><textarea id="editAnswerZh0" rows="5" required></textarea></label>
+          </div>
+        </section>
+
+        <section class="answer-editor full-width">
+          <div class="answer-editor-title">答案方向 2</div>
+          <div class="form-grid nested-grid">
+            <label class="field"><span>方向名称（中文）</span><input id="editAngleZh1" type="text" required /></label>
+            <label class="field"><span>Angle name (English)</span><input id="editAngleEn1" type="text" required /></label>
+            <label class="field full-width"><span>答案（英语）</span><textarea id="editAnswerEn1" rows="5" required></textarea></label>
+            <label class="field full-width"><span>答案翻译（中文）</span><textarea id="editAnswerZh1" rows="5" required></textarea></label>
+          </div>
+        </section>
+
+        <section class="answer-editor full-width">
+          <div class="answer-editor-title">答案方向 3</div>
+          <div class="form-grid nested-grid">
+            <label class="field"><span>方向名称（中文）</span><input id="editAngleZh2" type="text" required /></label>
+            <label class="field"><span>Angle name (English)</span><input id="editAngleEn2" type="text" required /></label>
+            <label class="field full-width"><span>答案（英语）</span><textarea id="editAnswerEn2" rows="5" required></textarea></label>
+            <label class="field full-width"><span>答案翻译（中文）</span><textarea id="editAnswerZh2" rows="5" required></textarea></label>
+          </div>
+        </section>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="secondary-button" id="cancelEditorButton" type="button">取消</button>
+        <button class="primary-button" id="saveCardButton" type="submit">保存卡片</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="install-dialog" id="installDialog">
+    <div class="dialog-header">
+      <div><div class="dialog-title">安装到设备</div><div class="dialog-subtitle">安装后可以像普通 App 一样打开</div></div>
+      <button class="icon-button" id="closeInstallButton" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="install-content" id="installContent"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="deck-data.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
